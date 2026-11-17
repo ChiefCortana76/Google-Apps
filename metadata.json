@@ -1,0 +1,6 @@
+{
+  "name": "Squawk on the Street",
+  "description": "Personal market command center for real-time indices, futures, market breadth, economic & earnings calendars, CNBC USA/Europe/Asia radio feeds, custom watchlists, and AI briefings.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

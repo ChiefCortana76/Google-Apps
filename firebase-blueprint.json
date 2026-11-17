@@ -1,0 +1,275 @@
+{
+  "entities": {
+    "Watchlist": {
+      "title": "Watchlist",
+      "description": "A user-created market watchlist containing tracked symbols across asset classes.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name of the watchlist."
+        },
+        "pinnedToTop": {
+          "type": "boolean",
+          "description": "Whether this watchlist is pinned at the top of the watchlists list."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Manual sort position for ordering watchlists."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "name", "pinnedToTop", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "WatchlistItem": {
+      "title": "WatchlistItem",
+      "description": "A single tracked market asset inside a user watchlist.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "watchlistId": {
+          "type": "string",
+          "description": "Parent watchlist document ID."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Ticker symbol (e.g., AAPL, SPY, ^GSPC, BTC-USD, ES=F)."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable asset name."
+        },
+        "assetClass": {
+          "type": "string",
+          "enum": ["STOCK", "ETF", "INDEX", "CRYPTO", "COMMODITY"],
+          "description": "Asset category."
+        },
+        "pinnedToTop": {
+          "type": "boolean",
+          "description": "Whether this item is pinned to the top of its watchlist."
+        },
+        "sortOrder": {
+          "type": "integer",
+          "description": "Manual drag-and-drop / reorder index within the watchlist."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "watchlistId", "symbol", "displayName", "assetClass", "pinnedToTop", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "UserPreferences": {
+      "title": "UserPreferences",
+      "description": "User theme mode, custom U.S. market hours, and auto-refresh interval settings.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "themeMode": {
+          "type": "string",
+          "enum": ["MARKET_AUTO", "DARK", "LIGHT"],
+          "description": "Theme selection mode."
+        },
+        "marketOpenMinutesEt": {
+          "type": "integer",
+          "description": "Minutes since midnight ET for Market Open (default 570 = 09:30 ET)."
+        },
+        "marketCloseMinutesEt": {
+          "type": "integer",
+          "description": "Minutes since midnight ET for Market Close (default 960 = 16:00 ET)."
+        },
+        "refreshIntervalSeconds": {
+          "type": "integer",
+          "description": "Auto-refresh interval in seconds (15, 30, 60, or 300)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "themeMode", "marketOpenMinutesEt", "marketCloseMinutesEt", "refreshIntervalSeconds", "createdAt", "updatedAt"]
+    },
+    "PriceAlert": {
+      "title": "PriceAlert",
+      "description": "A user-configured price threshold alert for a watchlist ticker.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Ticker symbol being monitored."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable name of the asset."
+        },
+        "condition": {
+          "type": "string",
+          "enum": ["ABOVE", "BELOW"],
+          "description": "Trigger direction relative to targetPrice."
+        },
+        "targetPrice": {
+          "type": "number",
+          "description": "Target price threshold."
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the alert is actively armed."
+        },
+        "triggered": {
+          "type": "boolean",
+          "description": "Whether the alert has already fired."
+        },
+        "lastTriggeredPrice": {
+          "type": "number",
+          "description": "Optional quote price when the alert last triggered."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "symbol", "displayName", "condition", "targetPrice", "enabled", "triggered", "createdAt", "updatedAt"]
+    },
+    "FcmDeviceToken": {
+      "title": "FcmDeviceToken",
+      "description": "Firebase Cloud Messaging device registration token for background price alert delivery.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "token": {
+          "type": "string",
+          "description": "FCM registration token."
+        },
+        "platform": {
+          "type": "string",
+          "enum": ["android"],
+          "description": "Client device platform."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "token", "platform", "createdAt", "updatedAt"]
+    },
+    "PortfolioHolding": {
+      "title": "PortfolioHolding",
+      "description": "A user portfolio equity, ETF, crypto, or commodity holding position.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "symbol": {
+          "type": "string",
+          "description": "Ticker symbol."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Human-readable asset name."
+        },
+        "assetClass": {
+          "type": "string",
+          "enum": ["STOCK", "ETF", "INDEX", "CRYPTO", "COMMODITY"],
+          "description": "Asset category."
+        },
+        "shares": {
+          "type": "number",
+          "description": "Quantity of shares or units held."
+        },
+        "avgCostBasis": {
+          "type": "number",
+          "description": "Average purchase cost per unit."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "symbol", "displayName", "assetClass", "shares", "avgCostBasis", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/watchlists/{watchlistId}": {
+      "schema": { "$ref": "#/entities/Watchlist" },
+      "description": "User-owned watchlists."
+    },
+    "/users/{userId}/watchlist_items/{itemId}": {
+      "schema": { "$ref": "#/entities/WatchlistItem" },
+      "description": "Assets belonging to user watchlists, ordered and pinned per user."
+    },
+    "/users/{userId}/preferences/{prefId}": {
+      "schema": { "$ref": "#/entities/UserPreferences" },
+      "description": "User theme, market hours, and refresh interval preferences."
+    },
+    "/users/{userId}/price_alerts/{alertId}": {
+      "schema": { "$ref": "#/entities/PriceAlert" },
+      "description": "User-owned ticker price alerts."
+    },
+    "/users/{userId}/fcm_tokens/{tokenId}": {
+      "schema": { "$ref": "#/entities/FcmDeviceToken" },
+      "description": "Registered FCM device tokens for push alerts."
+    },
+    "/users/{userId}/portfolio_holdings/{holdingId}": {
+      "schema": { "$ref": "#/entities/PortfolioHolding" },
+      "description": "User-owned portfolio positions."
+    }
+  }
+}

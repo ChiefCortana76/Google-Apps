@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">Squawk on the Street</string>
+    <string name="auth_subtitle">Personal Market Command Center</string>
+    <string name="action_sign_in_google">Sign in with Google</string>
+    <string name="action_sign_out">Sign Out</string>
+    <string name="cd_hero_banner">Squawk on the Street financial landscape banner</string>
+    <string name="cd_refresh">Refresh market data</string>
+    <string name="cd_settings">Open theme and refresh settings</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_pin">Toggle pin to top</string>
+    <string name="cd_delete">Delete item</string>
+    <string name="cd_add_watchlist">Create watchlist</string>
+    <string name="cd_add_symbol">Add symbol to watchlist</string>
+    <string name="cd_ai_send">Ask Market AI</string>
+    <string name="widget_market_desc">Live snapshot of S&amp;P 500, Nasdaq, Dow, Russell 2000, and VIX.</string>
+    <string name="widget_futures_desc">24/7 overnight index futures snapshot (ES, NQ, YM, RTY, VX).</string>
+    <string name="widget_economic_desc">Countdown to the next major U.S. economic release.</string>
+    <string name="channel_price_alerts_name">Price Alerts</string>
+    <string name="channel_price_alerts_desc">Real-time notifications when watchlist stocks hit your target prices.</string>
+    <string name="cd_alerts">Open watchlist price alerts</string>
+    <string name="cd_portfolio">Open portfolio manager</string>
+    <string name="cd_widget_refresh">Refresh home screen index widget</string>
+    <string name="alarm_settings_title">Alarm Tone</string>
+    <string name="alarm_settings_subtitle">Custom Media3 chime or local audio for price alerts</string>
+    <string name="cd_play_alarm_preview">Preview %1$s alarm tone</string>
+    <string name="cd_stop_alarm_preview">Stop %1$s alarm preview</string>
+    <string name="cd_configure_alarm">Configure price alert alarm tone</string>
+    <string name="bottom_bar_settings_title">Bottom Ribbon Tabs</string>
+    <string name="bottom_bar_settings_subtitle">Toggle each tab on or off and reorder its position in the bar</string>
+    <string name="cd_move_tab_up">Move %1$s tab earlier</string>
+    <string name="cd_move_tab_down">Move %1$s tab later</string>
+</resources>

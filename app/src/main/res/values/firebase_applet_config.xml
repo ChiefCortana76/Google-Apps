@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="firestore_database_id" translatable="false">ai-studio-android-marketco-a1438cfd-d66f-4042-8b71-95b2380e4af7</string>
+    <string name="recaptcha_site_key" translatable="false">6LctDSAuAAAAAJHbU7GXf7MGYVphaV1rF3Hgf9FH</string>
+</resources>

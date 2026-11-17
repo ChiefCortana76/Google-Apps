@@ -1,0 +1,232 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidWatchlist(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.name is string && data.name.size() >= 1 && data.name.size() <= 50 &&
+             data.pinnedToTop is bool &&
+             data.sortOrder is int && data.sortOrder >= 0 && data.sortOrder <= 10000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidWatchlistItem(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             isValidId(data.watchlistId) &&
+             data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 20 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.assetClass in ['STOCK', 'ETF', 'INDEX', 'CRYPTO', 'COMMODITY'] &&
+             data.pinnedToTop is bool &&
+             data.sortOrder is int && data.sortOrder >= 0 && data.sortOrder <= 10000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPreferences(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.themeMode in ['MARKET_AUTO', 'DARK', 'LIGHT'] &&
+             data.marketOpenMinutesEt is int && data.marketOpenMinutesEt >= 0 && data.marketOpenMinutesEt <= 1439 &&
+             data.marketCloseMinutesEt is int && data.marketCloseMinutesEt >= 0 && data.marketCloseMinutesEt <= 1439 &&
+             data.refreshIntervalSeconds in [15, 30, 60, 300] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPriceAlert(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 20 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.condition in ['ABOVE', 'BELOW'] &&
+             data.targetPrice is number && data.targetPrice > 0 && data.targetPrice <= 10000000 &&
+             data.enabled is bool &&
+             data.triggered is bool &&
+             (!('lastTriggeredPrice' in data) || data.lastTriggeredPrice == null ||
+               (data.lastTriggeredPrice is number && data.lastTriggeredPrice >= 0 && data.lastTriggeredPrice <= 10000000)) &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidFcmToken(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.token is string && data.token.size() >= 10 && data.token.size() <= 512 &&
+             data.platform in ['android'] &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidPortfolioHolding(data, userId) {
+      return data.userId is string && data.userId == userId &&
+             data.symbol is string && data.symbol.size() >= 1 && data.symbol.size() <= 20 &&
+             data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+             data.assetClass in ['STOCK', 'ETF', 'INDEX', 'CRYPTO', 'COMMODITY'] &&
+             data.shares is number && data.shares > 0 && data.shares <= 100000000 &&
+             data.avgCostBasis is number && data.avgCostBasis >= 0 && data.avgCostBasis <= 10000000 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/watchlists/{watchlistId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(watchlistId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(watchlistId) &&
+                       incoming().keys().hasAll(['userId', 'name', 'pinnedToTop', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'name', 'pinnedToTop', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                       isValidWatchlist(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(watchlistId) &&
+                       isValidWatchlist(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['pinnedToTop', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['sortOrder', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['name', 'pinnedToTop', 'sortOrder', 'updatedAt'])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(watchlistId);
+    }
+
+    match /users/{userId}/watchlist_items/{itemId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(itemId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(itemId) &&
+                       incoming().keys().hasAll(['userId', 'watchlistId', 'symbol', 'displayName', 'assetClass', 'pinnedToTop', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'watchlistId', 'symbol', 'displayName', 'assetClass', 'pinnedToTop', 'sortOrder', 'createdAt', 'updatedAt']) &&
+                       isValidWatchlistItem(incoming(), userId) &&
+                       existsAfter(/databases/$(database)/documents/users/$(userId)/watchlists/$(incoming().watchlistId));
+
+      allow update: if isOwner(userId) &&
+                       isValidId(itemId) &&
+                       isValidWatchlistItem(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().watchlistId == existing().watchlistId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['pinnedToTop', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['sortOrder', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['pinnedToTop', 'sortOrder', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'updatedAt'])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(itemId);
+    }
+
+    match /users/{userId}/preferences/{prefId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(prefId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(prefId) &&
+                       incoming().keys().hasAll(['userId', 'themeMode', 'marketOpenMinutesEt', 'marketCloseMinutesEt', 'refreshIntervalSeconds', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'themeMode', 'marketOpenMinutesEt', 'marketCloseMinutesEt', 'refreshIntervalSeconds', 'createdAt', 'updatedAt']) &&
+                       isValidPreferences(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(prefId) &&
+                       isValidPreferences(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['themeMode', 'marketOpenMinutesEt', 'marketCloseMinutesEt', 'refreshIntervalSeconds', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(prefId);
+    }
+
+    match /users/{userId}/price_alerts/{alertId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(alertId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(alertId) &&
+                       incoming().keys().hasAll(['userId', 'symbol', 'displayName', 'condition', 'targetPrice', 'enabled', 'triggered', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'symbol', 'displayName', 'condition', 'targetPrice', 'enabled', 'triggered', 'lastTriggeredPrice', 'createdAt', 'updatedAt']) &&
+                       isValidPriceAlert(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(alertId) &&
+                       isValidPriceAlert(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().symbol == existing().symbol &&
+                       incoming().createdAt == existing().createdAt &&
+                       (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['enabled', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['condition', 'targetPrice', 'enabled', 'triggered', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['triggered', 'lastTriggeredPrice', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['enabled', 'triggered', 'updatedAt'])
+                       );
+
+      allow delete: if isOwner(userId) && isValidId(alertId);
+    }
+
+    match /users/{userId}/fcm_tokens/{tokenId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(tokenId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(tokenId) &&
+                       incoming().keys().hasAll(['userId', 'token', 'platform', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'token', 'platform', 'createdAt', 'updatedAt']) &&
+                       isValidFcmToken(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(tokenId) &&
+                       isValidFcmToken(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['token', 'platform', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(tokenId);
+    }
+
+    match /users/{userId}/portfolio_holdings/{holdingId} {
+      allow list: if isOwner(userId);
+      allow get: if isOwner(userId) && isValidId(holdingId);
+
+      allow create: if isOwner(userId) &&
+                       isValidId(holdingId) &&
+                       incoming().keys().hasAll(['userId', 'symbol', 'displayName', 'assetClass', 'shares', 'avgCostBasis', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'symbol', 'displayName', 'assetClass', 'shares', 'avgCostBasis', 'createdAt', 'updatedAt']) &&
+                       isValidPortfolioHolding(incoming(), userId);
+
+      allow update: if isOwner(userId) &&
+                       isValidId(holdingId) &&
+                       isValidPortfolioHolding(incoming(), userId) &&
+                       incoming().userId == existing().userId &&
+                       incoming().symbol == existing().symbol &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'assetClass', 'shares', 'avgCostBasis', 'updatedAt']);
+
+      allow delete: if isOwner(userId) && isValidId(holdingId);
+    }
+  }
+}
